@@ -1,0 +1,6 @@
+ccxt
+pandas
+sqlalchemy
+matplotlib
+numpy
+backtrader
