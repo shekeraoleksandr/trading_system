@@ -11,5 +11,5 @@ class Plotter:
         plt.ylabel('Price')
         plt.legend()
         plt.grid()
-        plt.savefig('price_plot.png')  # Збереження графіка в файл
+        plt.savefig('plots/price_plot.png')  # Збереження графіка в файл
         plt.close()

@@ -3,13 +3,16 @@ import sqlite3
 
 
 class DataLoader:
-    def __init__(self, db_name='trading_data.db'):
+    def __init__(self, db_name):
         self.db_name = db_name
 
     def load_data(self, table_name):
-        conn = sqlite3.connect(self.db_name)
-        query = f"SELECT * FROM {table_name}"
-        data = pd.read_sql_query(query, conn)
-        conn.close()
-        data['timestamp'] = pd.to_datetime(data['timestamp'])
+        try:
+            conn = sqlite3.connect(self.db_name)
+            query = f"SELECT * FROM {table_name}"
+            data = pd.read_sql(query, conn)
+            conn.close()
+        except sqlite3.OperationalError as e:
+            print(f"Error loading data: {e}")
+            data = pd.DataFrame()
         return data

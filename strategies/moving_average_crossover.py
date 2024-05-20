@@ -13,26 +13,22 @@ class MovingAverageCrossoverStrategy(bt.Strategy):
         self.my_positions = []
 
     def next(self):
-        # Перевірка кількості відкритих угод
-        if len(self.broker.positions) >= self.params.max_open_trades:
-            return
-
         if self.order:  # Перевірка наявності активної угоди
             return
 
         available_cash = self.broker.getcash()
         trade_cash = available_cash * self.params.trade_size  # 20% від доступного капіталу
 
-        if self.crossover > 0:  # Коротка ковзна середня перетинає довгу вгору
+        if self.crossover > 0 and not self.position:  # Коротка ковзна середня перетинає довгу вгору
             self.order = self.buy(size=trade_cash / self.data.close[0])
             self.my_positions.append(
-                {'date': self.datas[0].datetime.date(0), 'position': 1.0, 'price': self.data.close[0]})
-            # print(f'{self.datas[0].datetime.date(0)}: BUY signal')
+                {'date': self.datas[0].datetime.date(0), 'position': 1.0, 'open_price': self.data.close[0],
+                 'close_price': None, 'profit': None}
+            )
         elif self.crossover < 0 and self.position:  # Коротка ковзна середня перетинає довгу вниз
             self.order = self.sell(size=self.position.size)
-            self.my_positions.append(
-                {'date': self.datas[0].datetime.date(0), 'position': -1.0, 'price': self.data.close[0]})
-            # print(f'{self.datas[0].datetime.date(0)}: SELL signal')
+            self.my_positions[-1]['close_price'] = self.data.close[0]
+            self.my_positions[-1]['profit'] = self.my_positions[-1]['close_price'] - self.my_positions[-1]['open_price']
 
     def notify_order(self, order):
         if order.status in [order.Completed, order.Canceled, order.Margin]:

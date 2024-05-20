@@ -8,6 +8,7 @@ class Backtest:
     def __init__(self, initial_capital=10000.0):
         self.initial_capital = initial_capital
         self.positions = pd.DataFrame()
+        self.ending_value = 0
 
     def run(self, data, trade_size, max_open_trades):
         cerebro = bt.Cerebro()
@@ -23,19 +24,35 @@ class Backtest:
         # Запуск бектестингу
         print(f'Starting Portfolio Value: {cerebro.broker.getvalue():.2f}')
         strategies = cerebro.run()
-        ending_value = cerebro.broker.getvalue()
-        print(f'Ending Portfolio Value: {ending_value:.2f}')
+        self.ending_value = cerebro.broker.getvalue()
+        print(f'Ending Portfolio Value: {self.ending_value:.2f}')
 
         # Відображення прибутку у відсотках
-        profit_percent = ((ending_value - self.initial_capital) / self.initial_capital) * 100
+        profit_percent = ((self.ending_value - self.initial_capital) / self.initial_capital) * 100
         print(f'Profit Percentage: {profit_percent:.2f}%')
 
         # Отримання позицій зі стратегії
         self.positions = strategies[0].get_positions()
 
         fig = cerebro.plot(iplot=False)[0][0]
-        fig.savefig('backtest_result.png')
-        # plt.close(fig)
+        fig.savefig('plots/backtest_result.png')
+        plt.close(fig)
 
     def get_positions(self):
         return self.positions
+
+    def get_portfolio_value(self):
+        return self.ending_value
+
+    def get_total_trades(self):
+        return len(self.positions)
+
+    def get_winning_trades(self):
+        if 'profit' in self.positions.columns:
+            return len(self.positions[self.positions['profit'] > 0])
+        return 0
+
+    def get_losing_trades(self):
+        if 'profit' in self.positions.columns:
+            return len(self.positions[self.positions['profit'] <= 0])
+        return 0
