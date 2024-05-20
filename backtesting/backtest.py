@@ -1,6 +1,7 @@
 import backtrader as bt
 from strategies import MovingAverageCrossoverStrategy
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class Backtest:
@@ -32,9 +33,9 @@ class Backtest:
         # Отримання позицій зі стратегії
         self.positions = strategies[0].get_positions()
 
-        # Збереження графіка в файл
         fig = cerebro.plot(iplot=False)[0][0]
         fig.savefig('backtest_result.png')
+        # plt.close(fig)
 
     def get_positions(self):
         return self.positions

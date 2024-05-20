@@ -6,3 +6,5 @@ class Config:
     DB_NAME = 'trading_data.db'
     TRADE_SIZE = 0.2  # 20% від капіталу
     MAX_OPEN_TRADES = 5  # Максимум 5 одночасних угод
+    TELEGRAM_TOKEN = '6701796848:AAE3Ppo_3Yfr7iSAyyLdZFKjuTIciakkk3s'
+    TELEGRAM_CHAT_ID = '423651665'

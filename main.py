@@ -66,11 +66,11 @@ def main():
     positions = backtest.get_positions()
 
     # Ініціалізація генератора сигналів
-    signal_generator = SignalGenerator(positions)
+    signal_generator = SignalGenerator(positions, config.TELEGRAM_TOKEN, config.TELEGRAM_CHAT_ID)
 
     # Генерація торгових сигналів
     trade_signals = signal_generator.generate_trade_signals()
-    # print(trade_signals)
+    print(trade_signals)
 
     # Надсилання сповіщень
     for index, signal in trade_signals.iterrows():
