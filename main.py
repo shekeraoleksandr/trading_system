@@ -3,6 +3,7 @@ import pandas as pd
 from data import DataFetcher, DataSaver, DataLoader
 from analysis import TechnicalIndicators
 from backtesting import Backtest
+from signals import SignalGenerator
 from visualization import Plotter
 from config import Config
 
@@ -60,6 +61,20 @@ def main():
 
     # Запуск бектестингу з backtrader
     backtest.run(data, config.TRADE_SIZE, config.MAX_OPEN_TRADES)
+
+    # Отримання позицій зі стратегії
+    positions = backtest.get_positions()
+
+    # Ініціалізація генератора сигналів
+    signal_generator = SignalGenerator(positions)
+
+    # Генерація торгових сигналів
+    trade_signals = signal_generator.generate_trade_signals()
+    # print(trade_signals)
+
+    # Надсилання сповіщень
+    for index, signal in trade_signals.iterrows():
+        signal_generator.send_alert(signal)
 
     # Візуалізація даних
     plotter = Plotter()

@@ -1,10 +1,12 @@
 import backtrader as bt
 from strategies import MovingAverageCrossoverStrategy
+import pandas as pd
 
 
 class Backtest:
     def __init__(self, initial_capital=10000.0):
         self.initial_capital = initial_capital
+        self.positions = pd.DataFrame()
 
     def run(self, data, trade_size, max_open_trades):
         cerebro = bt.Cerebro()
@@ -19,7 +21,7 @@ class Backtest:
 
         # Запуск бектестингу
         print(f'Starting Portfolio Value: {cerebro.broker.getvalue():.2f}')
-        cerebro.run()
+        strategies = cerebro.run()
         ending_value = cerebro.broker.getvalue()
         print(f'Ending Portfolio Value: {ending_value:.2f}')
 
@@ -27,4 +29,12 @@ class Backtest:
         profit_percent = ((ending_value - self.initial_capital) / self.initial_capital) * 100
         print(f'Profit Percentage: {profit_percent:.2f}%')
 
-        cerebro.plot()
+        # Отримання позицій зі стратегії
+        self.positions = strategies[0].get_positions()
+
+        # Збереження графіка в файл
+        fig = cerebro.plot(iplot=False)[0][0]
+        fig.savefig('backtest_result.png')
+
+    def get_positions(self):
+        return self.positions

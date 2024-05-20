@@ -1,4 +1,5 @@
 import backtrader as bt
+import pandas as pd
 
 
 class MovingAverageCrossoverStrategy(bt.Strategy):
@@ -9,6 +10,7 @@ class MovingAverageCrossoverStrategy(bt.Strategy):
         self.long_mavg = bt.ind.SMA(period=self.params.long_window)
         self.crossover = bt.ind.CrossOver(self.short_mavg, self.long_mavg)
         self.order = None  # Трекер для поточної відкритої угоди
+        self.my_positions = []
 
     def next(self):
         # Перевірка кількості відкритих угод
@@ -23,11 +25,18 @@ class MovingAverageCrossoverStrategy(bt.Strategy):
 
         if self.crossover > 0:  # Коротка ковзна середня перетинає довгу вгору
             self.order = self.buy(size=trade_cash / self.data.close[0])
-            print(f'{self.datas[0].datetime.date(0)}: BUY signal')
+            self.my_positions.append(
+                {'date': self.datas[0].datetime.date(0), 'position': 1.0, 'price': self.data.close[0]})
+            # print(f'{self.datas[0].datetime.date(0)}: BUY signal')
         elif self.crossover < 0 and self.position:  # Коротка ковзна середня перетинає довгу вниз
             self.order = self.sell(size=self.position.size)
-            print(f'{self.datas[0].datetime.date(0)}: SELL signal')
+            self.my_positions.append(
+                {'date': self.datas[0].datetime.date(0), 'position': -1.0, 'price': self.data.close[0]})
+            # print(f'{self.datas[0].datetime.date(0)}: SELL signal')
 
     def notify_order(self, order):
         if order.status in [order.Completed, order.Canceled, order.Margin]:
             self.order = None  # Скидаємо трекер угоди, коли угода завершена
+
+    def get_positions(self):
+        return pd.DataFrame(self.my_positions)
