@@ -1,4 +1,7 @@
 import ccxt
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TradeExecutor:
@@ -6,18 +9,22 @@ class TradeExecutor:
         self.exchange = ccxt.binance({
             'apiKey': api_key,
             'secret': api_secret,
-            'enableRateLimit': True,
         })
 
-    def execute_trade(self, symbol, trade_type, amount):
+    def execute_trade(self, symbol, side, amount):
         try:
-            if trade_type.upper() == 'BUY':
-                order = self.exchange.create_market_buy_order(symbol, amount)
-            elif trade_type.upper() == 'SELL':
-                order = self.exchange.create_market_sell_order(symbol, amount)
-            else:
-                raise ValueError(f"Invalid trade type: {trade_type}")
+            order = self.exchange.create_order(symbol, 'market', side, amount)
+            logger.info(f"Executed trade: {order}")
             return order
         except Exception as e:
-            print(f"Error executing trade: {e}")
+            logger.error(f"Error executing trade: {e}")
             return None
+
+    def get_active_orders(self):
+        try:
+            orders = self.exchange.fetch_open_orders()
+            logger.info(f"Fetched active orders: {orders}")
+            return orders
+        except Exception as e:
+            logger.error(f"Error fetching active orders: {e}")
+            return []

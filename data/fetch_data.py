@@ -1,5 +1,8 @@
 import ccxt
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DataFetcher:
@@ -9,12 +12,28 @@ class DataFetcher:
     def fetch_ohlcv(self, symbol, timeframe, since, until):
         all_data = []
         while since < until:
-            ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, since=since, limit=1000)
-            if not ohlcv:
+            try:
+                data = self.exchange.fetch_ohlcv(symbol, timeframe, since)
+                if not data:
+                    break
+                df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+                all_data.append(df)
+                since = data[-1][0] + 1  # Move to the next timestamp after the last one retrieved
+            except Exception as e:
+                logger.error(f"Error fetching data: {e}")
                 break
-            last_timestamp = ohlcv[-1][0]
-            since = last_timestamp + 1
-            all_data.extend(ohlcv)
-        data = pd.DataFrame(all_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
-        return data
+        return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
+
+    def fetch_market_state(self, symbol):
+        try:
+            ticker = self.exchange.fetch_ticker(symbol)
+            return {
+                'symbol': ticker['symbol'],
+                'bid': ticker['bid'],
+                'ask': ticker['ask'],
+                'last': ticker['last'],
+                'timestamp': ticker['timestamp']
+            }
+        except Exception as e:
+            logger.error(f"Error fetching market state: {e}")
+            return {}

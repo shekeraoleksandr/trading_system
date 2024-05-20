@@ -1,42 +1,34 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class TradeSimulator:
     def __init__(self, initial_balance):
         self.balance = initial_balance
         self.positions = []
-        self.trades = []
 
-    def execute_trade(self, symbol, trade_type, amount, price):
+    def execute_trade(self, symbol, side, amount, price):
         trade = {
             'symbol': symbol,
-            'type': trade_type,
+            'side': side,
             'amount': amount,
             'price': price,
-            'total': amount * price
+            'timestamp': pd.Timestamp.now()
         }
+        self.positions.append(trade)
+        if side == 'buy':
+            self.balance -= amount * price
+        elif side == 'sell':
+            self.balance += amount * price
 
-        if trade_type.upper() == 'BUY':
-            if self.balance >= trade['total']:
-                self.positions.append(trade)
-                self.balance -= trade['total']
-                self.trades.append(trade)
-                print(f"Simulated BUY: {amount} {symbol} at {price}")
-            else:
-                print("Insufficient balance for simulated BUY")
-        elif trade_type.upper() == 'SELL':
-            for position in self.positions:
-                if position['amount'] >= amount:
-                    position['amount'] -= amount
-                    self.balance += trade['total']
-                    self.trades.append(trade)
-                    print(f"Simulated SELL: {amount} {symbol} at {price}")
-                    break
-            else:
-                print("Insufficient position for simulated SELL")
+        logger.info(f"Executed simulated trade: {trade}")
+        logger.info(f"Updated balance: {self.balance}")
 
     def get_balance(self):
+        logger.info(f"Current balance: {self.balance}")
         return self.balance
 
     def get_positions(self):
+        logger.info(f"Current positions: {self.positions}")
         return self.positions
-
-    def get_trades(self):
-        return self.trades
