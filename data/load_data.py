@@ -1,18 +1,16 @@
+from sqlalchemy import create_engine
 import pandas as pd
-import sqlite3
 
 
 class DataLoader:
-    def __init__(self, db_name):
-        self.db_name = db_name
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.engine = create_engine(f"sqlite:///{self.db_path}")
 
     def load_data(self, table_name):
         try:
-            conn = sqlite3.connect(self.db_name)
-            query = f"SELECT * FROM {table_name}"
-            data = pd.read_sql(query, conn)
-            conn.close()
-        except sqlite3.OperationalError as e:
+            data = pd.read_sql_table(table_name, self.engine)
+        except Exception as e:
             print(f"Error loading data: {e}")
             data = pd.DataFrame()
         return data

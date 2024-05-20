@@ -22,7 +22,7 @@ def format_date(date_str):
 
 
 def run_backtest(config, interval, since, until):
-    db_path = "sqlite:///db/trading_data.db"
+    db_path = "db/trading_data.db"
     if not os.path.exists("db"):
         os.makedirs("db")
 
@@ -38,8 +38,10 @@ def run_backtest(config, interval, since, until):
     data = loader.load_data(table_name)
     if data.empty:
         print("No data found in database. Fetching new data...")
-        data = fetcher.fetch_ohlcv(config.BINANCE_SYMBOL, interval, fetcher.exchange.parse8601(since),
-                                   fetcher.exchange.parse8601(until))
+        since_timestamp = fetcher.exchange.parse8601(since + "T00:00:00Z")
+        until_timestamp = fetcher.exchange.parse8601(until + "T00:00:00Z")
+        data = fetcher.fetch_ohlcv(config.BINANCE_SYMBOL, interval, since_timestamp,
+                                   until_timestamp)
         if data.empty:
             print("No data fetched. Exiting.")
             return
