@@ -6,3 +6,6 @@ numpy
 backtrader
 telegram
 python-dotenv
+customtkinter
+ttkbootstrap
+mplfinance
