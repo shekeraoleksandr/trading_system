@@ -33,15 +33,10 @@ class SignalGenerator:
         await self.bot.send_message(chat_id=self.chat_id, text=message)
 
     def send_alert(self, signal):
-        trade_type = 'BUY' if signal['position'] == 1.0 else 'SELL'
-        message = f"Alert: {signal.name} - {trade_type} at price {signal['close']}"
-        print(message)  # Для відображення у консолі
-
-        loop = asyncio.get_event_loop()
-        if loop.is_closed():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.send_alert_async(message))
+        message = f"Alert: {signal.name} - {'BUY' if signal['position'] == 1.0 else 'SELL'} at price {signal['close']}"
+        print(message)
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.send_alert_async(message))
 
     def execute_trade(self, signal):
         trade_type = 'BUY' if signal['position'] == 1.0 else 'SELL'

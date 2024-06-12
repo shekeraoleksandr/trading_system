@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class TradeSimulator:
     def __init__(self, initial_balance):
@@ -32,3 +32,8 @@ class TradeSimulator:
     def get_positions(self):
         logger.info(f"Current positions: {self.positions}")
         return self.positions
+
+    def get_active_orders(self):
+        active_orders = [pos for pos in self.positions if pos['side'] == 'buy' or pos['side'] == 'sell']
+        logger.info(f"Active orders: {active_orders}")
+        return active_orders

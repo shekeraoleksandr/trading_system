@@ -18,11 +18,20 @@ class DataFetcher:
                     break
                 df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                 all_data.append(df)
-                since = data[-1][0] + 1  # Move to the next timestamp after the last one retrieved
+                since = data[-1][0] + 1
             except Exception as e:
                 logger.error(f"Error fetching data: {e}")
                 break
         return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
+
+    def fetch_ohlcv_real_time(self, symbol, timeframe, since, until):
+        try:
+            ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, since=since)
+            data = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            return data[data['timestamp'] <= until]  # Фільтрація даних до поточного моменту
+        except Exception as e:
+            print(f"Error fetching OHLCV data: {e}")
+            return pd.DataFrame()
 
     def fetch_market_state(self, symbol):
         try:

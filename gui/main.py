@@ -80,7 +80,8 @@ class TradingApp:
         self.interval_combobox.grid(row=4, column=1, padx=10, pady=5)
         self.interval_combobox.set(self.config.TIMEFRAME)
 
-        self.start_backtest_button = ttk.Button(self.backtest_frame, text="Запуск бектесту", command=self.start_backtesting)
+        self.start_backtest_button = ttk.Button(self.backtest_frame, text="Запуск бектесту",
+                                                command=self.start_backtesting)
         self.start_backtest_button.grid(row=5, column=0, columnspan=2, padx=10, pady=20)
 
         self.figure = Figure(figsize=(10, 6), dpi=100)
@@ -103,14 +104,17 @@ class TradingApp:
 
         self.realtime_interval_label = ttk.Label(self.realtime_frame, text="Інтервал свічок:")
         self.realtime_interval_label.grid(row=2, column=0, padx=10, pady=5, sticky="W")
-        self.realtime_interval_combobox = ttk.Combobox(self.realtime_frame, values=["1m", "5m", "15m", "30m", "1h", "4h", "1d"])
+        self.realtime_interval_combobox = ttk.Combobox(self.realtime_frame,
+                                                       values=["1m", "5m", "15m", "30m", "1h", "4h", "1d"])
         self.realtime_interval_combobox.grid(row=2, column=1, padx=10, pady=5)
         self.realtime_interval_combobox.set(self.config.TIMEFRAME)
 
-        self.start_realtime_button = ttk.Button(self.realtime_frame, text="Запуск симуляторної торгівлі", command=self.start_realtime_trading)
+        self.start_realtime_button = ttk.Button(self.realtime_frame, text="Запуск симуляторної торгівлі",
+                                                command=self.start_realtime_trading)
         self.start_realtime_button.grid(row=3, column=0, columnspan=2, padx=10, pady=20)
 
-        self.stop_realtime_button = ttk.Button(self.realtime_frame, text="Зупинка симуляторної торгівлі", command=self.stop_realtime_trading)
+        self.stop_realtime_button = ttk.Button(self.realtime_frame, text="Зупинка симуляторної торгівлі",
+                                               command=self.stop_realtime_trading)
         self.stop_realtime_button.grid(row=4, column=0, columnspan=2, padx=10, pady=20)
 
     def configure_grid(self):
@@ -228,7 +232,11 @@ class TradingApp:
             interval = self.realtime_interval_combobox.get() or self.config.TIMEFRAME
 
             self.realtime_trading = True
-            threading.Thread(target=self.run_realtime_trading_thread, args=(wallet_amount, trade_percent, interval)).start()
+
+            # Створення та запуск нового потоку для торгівлі в реальному часі
+            loop = asyncio.get_event_loop()
+            threading.Thread(target=loop.run_until_complete,
+                             args=(self.run_realtime_trading(wallet_amount, trade_percent, interval),)).start()
         except ValueError as e:
             logger.error(f"ValueError: {e}")
             messagebox.showerror("Помилка", "Будь ласка, введіть коректні дані.")
@@ -248,10 +256,13 @@ class TradingApp:
         await telegram_bot.send_message(f"Real-time trading started with interval {interval}.")
 
         sleep_interval = self.get_sleep_interval(interval)
-
+        start_time = fetcher.exchange.milliseconds()
         while self.realtime_trading:
-            data = fetcher.fetch_ohlcv(self.config.BINANCE_SYMBOL, interval, fetcher.exchange.milliseconds() - 86400000,
-                                       fetcher.exchange.milliseconds())
+
+            now = fetcher.exchange.milliseconds()  # Поточний час
+            since = start_time
+
+            data = fetcher.fetch_ohlcv_real_time(self.config.BINANCE_SYMBOL, interval, since, now)
             if data.empty:
                 logger.warning("No data fetched. Waiting for new data...")
                 await asyncio.sleep(sleep_interval)
@@ -269,11 +280,11 @@ class TradingApp:
                 data['short_mavg'] = data['close'].rolling(window=12).mean()
                 data['long_mavg'] = data['close'].rolling(window=26).mean()
 
-            signal_generator = SignalGenerator(data, self.config.TELEGRAM_TOKEN, self.config.TELEGRAM_CHAT_ID, trade_simulator,
+            signal_generator = SignalGenerator(data, self.config.TELEGRAM_TOKEN, self.config.TELEGRAM_CHAT_ID,
+                                               trade_simulator,
                                                trade_simulator, trade_percent, self.config.DRY_RUN)
             signal_generator.process_signals()
 
-            # Логування активних ордерів та стану ринку
             active_orders = trade_simulator.get_active_orders()
             market_state = fetcher.fetch_market_state(self.config.BINANCE_SYMBOL)
 
