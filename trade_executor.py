@@ -28,3 +28,4 @@ class TradeExecutor:
         except Exception as e:
             logger.error(f"Error fetching active orders: {e}")
             return []
+        #тест
